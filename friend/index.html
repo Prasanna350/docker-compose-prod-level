@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✧ butterfly chase ✧</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; min-height: 100vh; overflow: hidden;
+      font-family: 'Segoe UI', 'Quicksand', system-ui, sans-serif;
+      background: linear-gradient(170deg, #d4f5e8 0%, #e0f0ff 35%, #f5e0ff 70%, #ffe8f4 100%);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="%23ffb3d9" opacity="0.35"/><circle cx="16" cy="16" r="7" fill="%23ff8fc8" opacity="0.85"/><circle cx="12" cy="12" r="2" fill="white"/><circle cx="20" cy="12" r="2" fill="white"/><circle cx="16" cy="19" r="2.5" fill="%23ffd700"/></svg>') 15 15, auto;
+      touch-action: manipulation;
+    }
+    .bg-decor { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .bg-decor span {
+      position: absolute; font-size: 1.3rem; opacity: 0.22;
+      animation: floatUp 16s linear infinite; user-select: none;
+      filter: drop-shadow(0 0 8px rgba(255, 150, 200, 0.5));
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(110vh) rotate(0deg) scale(0.6); opacity: 0; }
+      15% { opacity: 0.3; } 85% { opacity: 0.3; }
+      100% { transform: translateY(-15vh) rotate(360deg) scale(1); opacity: 0; }
+    }
+    .card {
+      position: relative; z-index: 10;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-radius: 45px;
+      box-shadow: 0 25px 55px rgba(160, 130, 200, 0.25), 0 8px 20px rgba(255, 150, 200, 0.15), inset 0 2px 10px rgba(255, 255, 255, 0.9);
+      padding: 1.8rem 1.8rem 2rem; max-width: 620px; width: 100%;
+      border: 3px solid rgba(255, 255, 255, 0.75); text-align: center;
+      animation: cardPop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transition: max-width 0.4s ease;
+    }
+    .card.guide-open { max-width: 820px; }
+    @keyframes cardPop {
+      0% { opacity: 0; transform: scale(0.85) translateY(30px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .layout { display: flex; gap: 1.2rem; align-items: flex-start; justify-content: center; }
+    .game-col { flex: 1 1 auto; max-width: 560px; min-width: 0; }
+    .header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 0.4rem; position: relative; }
+    h1 {
+      font-size: 2rem; font-weight: 700; letter-spacing: 0.5px;
+      background: linear-gradient(135deg, #ff8fc8, #c490f0, #8fc8ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 4px 14px rgba(200, 150, 220, 0.4); white-space: nowrap;
+    }
+    .subhead { font-size: 0.85rem; color: #a6758c; font-weight: 600; margin-bottom: 1rem; letter-spacing: 1.5px; text-transform: uppercase; }
+    .guide-toggle {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(196, 144, 240, 0.2); border: 2px solid rgba(196, 144, 240, 0.4);
+      color: #9c6bd4; font-size: 1.2rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s; font-family: inherit; font-weight: 700; flex-shrink: 0;
+    }
+    .guide-toggle:hover { background: rgba(196, 144, 240, 0.4); transform: translateY(-50%) rotate(15deg); }
+    .guide-toggle.active { background: rgba(196, 144, 240, 0.55); color: white; }
+    .guide-panel {
+      flex: 0 0 0; width: 0; overflow: hidden;
+      transition: flex-basis 0.4s ease, width 0.4s ease, opacity 0.3s ease; opacity: 0;
+    }
+    .guide-panel.open { flex: 0 0 240px; width: 240px; opacity: 1; }
+    .guide-inner {
+      background: rgba(250, 245, 255, 0.9); border: 2px solid rgba(196, 144, 240, 0.35);
+      border-radius: 25px; padding: 1.2rem 1.1rem; text-align: left; min-width: 240px;
+    }
+    .guide-inner h2 { font-size: 1.05rem; color: #9c6bd4; margin-bottom: 0.8rem; text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+    .guide-inner h3 { font-size: 0.85rem; color: #c25a9a; margin: 0.9rem 0 0.4rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .guide-inner ul { list-style: none; padding: 0; }
+    .guide-inner li { font-size: 0.82rem; color: #7a5a8a; line-height: 1.5; padding: 3px 0 3px 18px; position: relative; font-weight: 500; }
+    .guide-inner li::before { content: '•'; position: absolute; left: 4px; color: #c490f0; font-weight: 700; font-size: 1rem; }
+    .key-hint { display: inline-block; background: rgba(196, 144, 240, 0.2); border: 1px solid rgba(196, 144, 240, 0.4); border-radius: 6px; padding: 0 6px; font-size: 0.75rem; font-weight: 700; color: #9c6bd4; font-family: 'Consolas', monospace; }
+    .guide-tip { margin-top: 0.9rem; padding: 0.6rem 0.8rem; background: rgba(255, 220, 240, 0.6); border-radius: 14px; font-size: 0.78rem; color: #b04e88; font-style: italic; border-left: 3px solid #ff8fc8; line-height: 1.4; }
+    .stats-bar { display: flex; justify-content: center; gap: 0.8rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .stat-chip {
+      display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700;
+      color: #7a5a8a; background: rgba(250, 245, 255, 0.85); padding: 0.45rem 1rem;
+      border-radius: 30px; border: 1.5px solid rgba(196, 144, 240, 0.3);
+      box-shadow: 0 2px 6px rgba(180, 150, 220, 0.15); transition: all 0.2s;
+    }
+    .stat-chip strong { color: #9c6bd4; font-size: 1rem; }
+    .stat-chip.lives strong { color: #ff6ba6; letter-spacing: 1px; }
+    .stat-chip.pulse { animation: chipPulse 0.3s ease; }
+    @keyframes chipPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+    .game-wrap {
+      position: relative; width: 100%; border-radius: 30px; overflow: hidden;
+      box-shadow: inset 0 0 30px rgba(180, 150, 220, 0.2), 0 6px 20px rgba(160, 130, 200, 0.2);
+      background: linear-gradient(180deg, #e8f8f0 0%, #f0e8ff 50%, #ffe8f4 100%);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+    }
+    canvas { display: block; width: 100%; height: auto; touch-action: none; }
+    .overlay {
+      position: absolute; inset: 0; background: rgba(250, 245, 255, 0.85);
+      backdrop-filter: blur(6px); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 0.8rem; z-index: 20;
+      transition: opacity 0.3s; padding: 1rem; text-align: center;
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+    .overlay-title {
+      font-size: 1.6rem; font-weight: 800;
+      background: linear-gradient(135deg, #ff8fc8, #c490f0);
+      -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: 0.5px;
+    }
+    .overlay-sub { font-size: 0.9rem; color: #9a6a9a; font-weight: 600; max-width: 320px; line-height: 1.5; }
+    .overlay-score { font-size: 2.4rem; font-weight: 800; color: #9c6bd4; line-height: 1; }
+    .overlay-score-label { font-size: 0.75rem; color: #a6758c; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-top: -4px; }
+    .play-btn {
+      background: linear-gradient(135deg, #c490f0, #a06bd4); border: 2px solid #f5eeff;
+      padding: 0.85rem 2.4rem; border-radius: 50px; font-size: 1.05rem; font-weight: 700;
+      color: #fdf8ff; text-shadow: 0 2px 6px rgba(120, 70, 180, 0.4); letter-spacing: 0.5px;
+      box-shadow: 0 6px 0 #7a4ab0, 0 10px 22px rgba(160, 100, 220, 0.4); cursor: pointer;
+      transition: all 0.1s; font-family: inherit; display: flex; align-items: center;
+      gap: 8px; transform: translateY(0);
+    }
+    .play-btn:hover { background: linear-gradient(135deg, #d4a0ff, #b07be0); box-shadow: 0 6px 0 #7a4ab0, 0 14px 26px rgba(160, 100, 220, 0.5); }
+    .play-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 #7a4ab0, 0 6px 16px rgba(160, 100, 220, 0.4); }
+    .high-score-badge {
+      background: linear-gradient(135deg, #ffd4a3, #ffb380); color: #7a4a2a;
+      font-size: 0.8rem; font-weight: 800; padding: 0.35rem 1rem; border-radius: 30px;
+      letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 3px 10px rgba(255, 180, 120, 0.5);
+      animation: badgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    .foot-controls { display: flex; justify-content: center; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
+    .foot-btn {
+      background: rgba(196, 144, 240, 0.15); border: 1.5px solid rgba(196, 144, 240, 0.35);
+      padding: 0.55rem 1.2rem; border-radius: 30px; font-size: 0.85rem; font-weight: 700;
+      color: #9c6bd4; cursor: pointer; transition: all 0.2s; font-family: inherit;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .foot-btn:hover { background: rgba(196, 144, 240, 0.3); transform: translateY(-1px); }
+    .foot-btn:active { transform: translateY(1px); }
+    .sound-toggle {
+      position: absolute; top: 1.8rem; left: 1.8rem; width: 38px; height: 38px;
+      border-radius: 50%; background: rgba(196, 144, 240, 0.15);
+      border: 1.5px solid rgba(196, 144, 240, 0.3); color: #9c6bd4; font-size: 1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; z-index: 15;
+    }
+    .sound-toggle:hover { background: rgba(196, 144, 240, 0.3); }
+    .combo-meter {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(6px);
+      padding: 0.35rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 800;
+      color: #9c6bd4; letter-spacing: 0.5px; z-index: 12;
+      border: 1.5px solid rgba(196, 144, 240, 0.3); opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .combo-meter.show { opacity: 1; }
+    @media (max-width: 820px) {
+      .card.guide-open { max-width: 620px; }
+      .layout { flex-direction: column; align-items: center; }
+      .guide-panel.open { flex: 1 1 auto; width: 100%; max-width: 560px; }
+      .guide-inner { min-width: auto; }
+    }
+    @media (max-width: 560px) {
+      .card { padding: 1.4rem 1rem 1.6rem; border-radius: 35px; }
+      h1 { font-size: 1.5rem; }
+      .subhead { font-size: 0.75rem; }
+      .guide-toggle { width: 34px; height: 34px; font-size: 1rem; }
+      .stat-chip { font-size: 0.75rem; padding: 0.4rem 0.8rem; }
+      .overlay-title { font-size: 1.3rem; }
+      .overlay-score { font-size: 2rem; }
+      .play-btn { font-size: 0.95rem; padding: 0.75rem 1.8rem; }
+      .sound-toggle { top: 1.4rem; left: 1.4rem; width: 32px; height: 32px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-decor" id="bgDecor"></div>
+  <div class="card" id="card">
+    <button class="sound-toggle" id="soundToggle" title="toggle sound">🔊</button>
+    <div class="header">
+      <h1>✧ butterfly chase ✧</h1>
+      <button class="guide-toggle" id="guideToggle" title="how to play">?</button>
+    </div>
+    <div class="subhead">collect flowers · avoid the webs</div>
+    <div class="layout">
+      <div class="game-col">
+        <div class="stats-bar">
+          <div class="stat-chip" id="scoreChip">🌸 score: <strong id="scoreValue">0</strong></div>
+          <div class="stat-chip" id="comboChip">✨ combo: <strong id="comboValue">0</strong></div>
+          <div class="stat-chip lives" id="livesChip">🦋 lives: <strong id="livesValue">❤❤❤</strong></div>
+        </div>
+        <div class="game-wrap">
+          <canvas id="gameCanvas" width="520" height="600"></canvas>
+          <div class="combo-meter" id="comboMeter">✨ combo x1</div>
+          <div class="overlay" id="startOverlay">
+            <div class="overlay-title">🦋 butterfly chase</div>
+            <div class="overlay-sub">guide the butterfly to collect flowers<br>but avoid the sticky spider webs!</div>
+            <button class="play-btn" id="startBtn"><span>▶</span> play</button>
+          </div>
+          <div class="overlay hidden" id="gameoverOverlay">
+            <div class="overlay-title" id="gameoverTitle">caught in a web! 🕸️</div>
+            <div class="overlay-score" id="finalScore">0</div>
+            <div class="overlay-score-label">flowers collected</div>
+            <div id="badgeContainer"></div>
+            <button class="play-btn" id="playAgainBtn"><span>↺</span> play again</button>
+          </div>
+        </div>
+        <div class="foot-controls">
+          <button class="foot-btn" id="pauseBtn">⏸ pause</button>
+          <button class="foot-btn" id="resetBtn">↺ reset</button>
+          <button class="foot-btn" id="guideFootBtn">📖 how to play</button>
+        </div>
+      </div>
+      <div class="guide-panel" id="guidePanel">
+        <div class="guide-inner">
+          <h2>📖 how to play</h2>
+          <h3>🎯 goal</h3>
+          <ul>
+            <li>Guide the butterfly to land on flowers.</li>
+            <li>Each flower collected = points.</li>
+            <li>Avoid the spider webs — 3 hits and it's over!</li>
+          </ul>
+          <h3>🎮 controls</h3>
+          <ul>
+            <li>move mouse / finger — butterfly follows</li>
+            <li><span class="key-hint">←</span> <span class="key-hint">→</span> <span class="key-hint">↑</span> <span class="key-hint">↓</span> arrow keys</li>
+            <li><span class="key-hint">space</span> — flap (speed boost)</li>
+          </ul>
+          <h3>⭐ scoring</h3>
+          <ul>
+            <li>Each flower = +10 points</li>
+            <li>Chain flowers quickly = combo bonus</li>
+            <li>Combo multiplier = +5 × combo</li>
+            <li>Golden flowers = +25 bonus</li>
+          </ul>
+          <h3>⚠️ hazards</h3>
+          <ul>
+            <li>Spider webs drift slowly across the screen.</li>
+            <li>They get faster the longer you survive.</li>
+            <li>Webs pulse — watch for the glow.</li>
+          </ul>
+          <div class="guide-tip">
+            ✨ <strong>pro tip:</strong> fly through flowers in a smooth arc to keep your combo alive. The butterfly is fastest when you lead it gently!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      'use strict';
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const card = document.getElementById('card');
+      const guideToggle = document.getElementById('guideToggle');
+      const guidePanel = document.getElementById('guidePanel');
+      const guideFootBtn = document.getElementById('guideFootBtn');
+      const startOverlay = document.getElementById('startOverlay');
+      const gameoverOverlay = document.getElementById('gameoverOverlay');
+      const startBtn = document.getElementById('startBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+      const finalScoreEl = document.getElementById('finalScore');
+      const gameoverTitle = document.getElementById('gameoverTitle');
+      const badgeContainer = document.getElementById('badgeContainer');
+      const scoreValue = document.getElementById('scoreValue');
+      const comboValue = document.getElementById('comboValue');
+      const livesValue = document.getElementById('livesValue');
+      const scoreChip = document.getElementById('scoreChip');
+      const comboChip = document.getElementById('comboChip');
+      const livesChip = document.getElementById('livesChip');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const soundToggle = document.getElementById('soundToggle');
+      const comboMeter = document.getElementById('comboMeter');
+      const STORAGE_KEY = 'butterflyChaseHighScore';
+
+      let state = {
+        running: false, paused: false, gameOver: false,
+        score: 0, combo: 0, comboTimer: 0, lives: 3,
+        highScore: 0, soundEnabled: true
+      };
+      try { const s = localStorage.getItem(STORAGE_KEY); if (s) state.highScore = parseInt(s, 10) || 0; } catch (e) {}
+
+      const butterfly = {
+        x: W/2, y: H/2, vx: 0, vy: 0,
+        targetX: W/2, targetY: H/2,
+        wingPhase: 0, wingSpeed: 0.35,
+        angle: 0, size: 1, boost: 0,
+        trail: [], invulnerable: 0,
+        blinkTimer: 120, isBlinking: false,
+        bobPhase: 0, headBob: 0, antennaPhase: 0
+      };
+
+      let flowers = [], webs = [], particles = [], sparkles = [], scorePopups = [];
+      let gameTime = 0, spawnTimer = 0, webSpawnTimer = 0, webSpawnInterval = 180;
+
+      const FLOWER_TYPES = [
+        { petal1: '#ffb3d9', petal2: '#ff6ba6', center: '#ffd700', centerDark: '#ffaa00', points: 10, name: 'pink', petalCount: 6 },
+        { petal1: '#d4a5ff', petal2: '#a06bd4', center: '#fff176', centerDark: '#ffcc00', points: 10, name: 'lavender', petalCount: 6 },
+        { petal1: '#a5d8ff', petal2: '#5aa8ff', center: '#ffeb3b', centerDark: '#ffaa00', points: 10, name: 'sky', petalCount: 5 },
+        { petal1: '#ffc9a5', petal2: '#ff9a5c', center: '#fff176', centerDark: '#ffcc00', points: 10, name: 'peach', petalCount: 6 },
+        { petal1: '#ff9ec7', petal2: '#ff4d88', center: '#ffd700', centerDark: '#ffaa00', points: 15, name: 'rose', petalCount: 5 },
+        { petal1: '#ffe680', petal2: '#ffcc00', center: '#fff9c4', centerDark: '#ffb300', points: 25, name: 'golden', special: true, petalCount: 8 }
+      ];
+
+      let audioCtx = null;
+      function initAudio() {
+        if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      }
+      function playSound(type, pitch = 0) {
+        if (!state.soundEnabled || !audioCtx) return;
+        const now = audioCtx.currentTime;
+        if (type === 'collect') {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sine'; const f = 660 + pitch * 40;
+          o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f * 1.5, now + 0.1);
+          g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.12, now + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+          o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 0.23);
+        } else if (type === 'web') {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'sawtooth'; o.frequency.setValueAtTime(200, now); o.frequency.exponentialRampToValueAtTime(60, now + 0.3);
+          g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.15, now + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+          o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now + 0.36);
+        } else if (type === 'golden') {
+          [660, 880, 1100, 1320].forEach((f, i) => {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'sine'; o.frequency.setValueAtTime(f, now + i * 0.08);
+            g.gain.setValueAtTime(0.0001, now + i * 0.08); g.gain.exponentialRampToValueAtTime(0.15, now + i * 0.08 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.08 + 0.3);
+            o.connect(g); g.connect(audioCtx.destination); o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.32);
+          });
+        } else if (type === 'gameover') {
+          [523, 440, 349, 262].forEach((f, i) => {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'triangle'; o.frequency.setValueAtTime(f, now + i * 0.15);
+            g.gain.setValueAtTime(0.0001, now + i * 0.15); g.gain.exponentialRampToValueAtTime(0.15, now + i * 0.15 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.15 + 0.4);
+            o.connect(g); g.connect(audioCtx.destination); o.start(now + i * 0.15); o.stop(now + i * 0.15 + 0.42);
+          });
+        }
+      }
+
+      function createBgDecor() {
+        const c = document.getElementById('bgDecor');
+        ['🦋','🌸','🌺','✨','🕸️','🌷','💜','💫'].forEach(() => {
+          const s = document.createElement('span');
+          s.textContent = ['🦋','🌸','🌺','✨','🕸️','🌷','💜','💫'][Math.floor(Math.random()*8)];
+          s.style.left = Math.random()*100 + '%';
+          s.style.animationDuration = (13 + Math.random()*8) + 's';
+          s.style.animationDelay = (Math.random()*15) + 's';
+          s.style.fontSize = (1 + Math.random()*1.1) + 'rem';
+          c.appendChild(s);
+        });
+      }
+
+      function spawnAmbientSparkles() {
+        if (Math.random() < 0.08 && sparkles.length < 40) {
+          sparkles.push({
+            x: Math.random()*W, y: H+10,
+            vx: (Math.random()-0.5)*0.3, vy: -0.3 - Math.random()*0.5,
+            size: 1 + Math.random()*2, life: 1,
+            color: ['#ffd700','#ffb3d9','#c490f0','#8fc8ff','#ff9ec7'][Math.floor(Math.random()*5)],
+            phase: Math.random()*Math.PI*2
+          });
+        }
+      }
+
+      // ========== BUTTERFLY — smaller, realistic 3D wing flap ==========
+      function drawButterfly() {
+        const b = butterfly;
+        if (b.invulnerable > 0 && Math.floor(b.invulnerable/4) % 2 === 0) return;
+        const bob = Math.sin(b.bobPhase) * 2;
+        const size = 16 * b.size; // smaller butterfly
+        const flap = Math.sin(b.wingPhase);
+        const flap2 = Math.cos(b.wingPhase * 0.85);
+
+        ctx.save();
+        ctx.translate(b.x, b.y + bob);
+        ctx.rotate(b.angle * 0.25);
+
+        // Soft glow
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 2.2, 0, Math.PI * 2);
+        const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 2.2);
+        gg.addColorStop(0, 'rgba(255, 200, 240, 0.35)');
+        gg.addColorStop(1, 'rgba(255, 200, 240, 0)');
+        ctx.fillStyle = gg;
+        ctx.fill();
+
+        // === LEFT WING with 3D perspective flap ===
+        ctx.save();
+        // Wing fold: rotateY-style using horizontal scale for realistic fold
+        const leftFold = 0.4 + 0.6 * Math.abs(Math.cos(b.wingPhase));
+        ctx.scale(leftFold, 1);
+        ctx.rotate(-flap * 0.15);
+
+        // Upper left wing — beautiful curved shape
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, -size * 0.15);
+        ctx.bezierCurveTo(
+          -size * 0.5, -size * 1.3,
+          -size * 1.6, -size * 1.5,
+          -size * 1.75, -size * 0.5
+        );
+        ctx.bezierCurveTo(
+          -size * 1.85, size * 0.3,
+          -size * 1.0, size * 0.5,
+          -size * 0.4, size * 0.25
+        );
+        ctx.bezierCurveTo(
+          -size * 0.25, size * 0.15,
+          -size * 0.15, size * 0.05,
+          -size * 0.1, -size * 0.15
+        );
+        ctx.closePath();
+        const lwGrad = ctx.createRadialGradient(-size * 0.9, -size * 0.6, size * 0.1, -size * 0.8, -size * 0.3, size * 1.6);
+        lwGrad.addColorStop(0, '#ffd9ef');
+        lwGrad.addColorStop(0.35, '#ff9ecf');
+        lwGrad.addColorStop(0.7, '#c88af0');
+        lwGrad.addColorStop(1, '#9c6bd4');
+        ctx.fillStyle = lwGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 70, 180, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Wing pattern — heart
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.9, -size * 0.75);
+        ctx.bezierCurveTo(-size * 1.35, -size * 1.05, -size * 1.15, -size * 1.4, -size * 0.9, -size * 1.1);
+        ctx.bezierCurveTo(-size * 0.65, -size * 1.4, -size * 0.45, -size * 1.05, -size * 0.9, -size * 0.75);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fill();
+
+        // Small spots
+        ctx.beginPath(); ctx.arc(-size * 1.35, -size * 0.85, size * 0.14, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(-size * 0.7, -size * 1.15, size * 0.1, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 230, 250, 0.9)'; ctx.fill();
+
+        // Lower left wing
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, size * 0.1);
+        ctx.bezierCurveTo(
+          -size * 0.6, size * 0.35,
+          -size * 1.2, size * 1.1,
+          -size * 0.7, size * 1.25
+        );
+        ctx.bezierCurveTo(
+          -size * 0.25, size * 1.3,
+          size * 0.0, size * 0.75,
+          -size * 0.1, size * 0.1
+        );
+        ctx.closePath();
+        const llGrad = ctx.createRadialGradient(-size * 0.6, size * 0.7, size * 0.05, -size * 0.4, size * 0.7, size * 1.1);
+        llGrad.addColorStop(0, '#c88af0');
+        llGrad.addColorStop(1, '#9c6bd4');
+        ctx.fillStyle = llGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 70, 180, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.beginPath(); ctx.arc(-size * 0.5, size * 0.85, size * 0.1, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 230, 250, 0.85)'; ctx.fill();
+
+        ctx.restore(); // end left wing
+
+        // === RIGHT WING (mirrored) ===
+        ctx.save();
+        const rightFold = 0.4 + 0.6 * Math.abs(Math.cos(b.wingPhase));
+        ctx.scale(-rightFold, 1);
+        ctx.rotate(-flap * 0.15);
+
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, -size * 0.15);
+        ctx.bezierCurveTo(
+          -size * 0.5, -size * 1.3,
+          -size * 1.6, -size * 1.5,
+          -size * 1.75, -size * 0.5
+        );
+        ctx.bezierCurveTo(
+          -size * 1.85, size * 0.3,
+          -size * 1.0, size * 0.5,
+          -size * 0.4, size * 0.25
+        );
+        ctx.bezierCurveTo(
+          -size * 0.25, size * 0.15,
+          -size * 0.15, size * 0.05,
+          -size * 0.1, -size * 0.15
+        );
+        ctx.closePath();
+        const rwGrad = ctx.createRadialGradient(-size * 0.9, -size * 0.6, size * 0.1, -size * 0.8, -size * 0.3, size * 1.6);
+        rwGrad.addColorStop(0, '#ffd9ef');
+        rwGrad.addColorStop(0.35, '#ff9ecf');
+        rwGrad.addColorStop(0.7, '#c88af0');
+        rwGrad.addColorStop(1, '#9c6bd4');
+        ctx.fillStyle = rwGrad;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 70, 180, 0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.9, -size * 0.75);
+        ctx.bezierCurveTo(-size * 1.35, -size * 1.05, -size * 1.15, -size * 1.4, -size * 0.9, -size * 1.1);
+        ctx.bezierCurveTo(-size * 0.65, -size * 1.4, -size * 0.45, -size * 1.05, -size * 0.9, -size * 0.75);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fill();
+
+        ctx.beginPath(); ctx.arc(-size * 1.35, -size * 0.85, size * 0.14, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(-size * 0.7, -size * 1.15, size * 0.1, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 230, 250, 0.9)'; ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.1, size * 0.1);
+        ctx.bezierCurveTo(
+          -size * 0.6, size * 0.35,
+          -size * 1.2, size * 1.1,
+          -size * 0.7, size * 1.25
+        );
+        ctx.bezierCurveTo(
+          -size * 0.25, size * 1.3,
+          size * 0.0, size * 0.75,
+          -size * 0.1, size * 0.1
+        );
+        ctx.closePath();
+        const llGrad2 = ctx.createRadialGradient(-size * 0.6, size * 0.7, size * 0.05, -size * 0.4, size * 0.7, size * 1.1);
+        llGrad2.addColorStop(0, '#c88af0');
+        llGrad2.addColorStop(1, '#9c6bd4');
+        ctx.fillStyle = llGrad2;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(120, 70, 180, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.beginPath(); ctx.arc(-size * 0.5, size * 0.85, size * 0.1, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 230, 250, 0.85)'; ctx.fill();
+
+        ctx.restore(); // end right wing
+
+        // === BODY ===
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.15, size * 0.75, 0, 0, Math.PI * 2);
+        const bg = ctx.createLinearGradient(0, -size, 0, size);
+        bg.addColorStop(0, '#6b4a7a'); bg.addColorStop(0.5, '#4a2f5a'); bg.addColorStop(1, '#3a2545');
+        ctx.fillStyle = bg;
+        ctx.fill();
+
+        // === HEAD ===
+        const hb = Math.sin(b.headBob) * 0.5;
+        ctx.beginPath();
+        ctx.arc(0, -size * 0.85 + hb, size * 0.25, 0, Math.PI * 2);
+        const hg = ctx.createRadialGradient(-size*0.08, -size*0.92+hb, 0, 0, -size*0.85+hb, size*0.28);
+        hg.addColorStop(0, '#7a5a8a'); hg.addColorStop(1, '#4a2f5a');
+        ctx.fillStyle = hg;
+        ctx.fill();
+
+        // Eyes
+        const eyeY = -size * 0.9 + hb;
+        const eyeOff = size * 0.11;
+        const eyeSize = size * 0.09;
+        if (b.isBlinking) {
+          ctx.strokeStyle = '#f5e6ff'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.arc(-eyeOff, eyeY, eyeSize*0.85, 0.15, Math.PI-0.15); ctx.stroke();
+          ctx.beginPath(); ctx.arc(eyeOff, eyeY, eyeSize*0.85, 0.15, Math.PI-0.15); ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(-eyeOff, eyeY, eyeSize, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eyeOff, eyeY, eyeSize, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+          const lx = Math.max(-1, Math.min(1, b.vx*0.12));
+          const ly = Math.max(-1, Math.min(1, b.vy*0.12));
+          ctx.beginPath(); ctx.arc(-eyeOff + lx*eyeSize*0.5, eyeY + ly*eyeSize*0.5, eyeSize*0.55, 0, Math.PI*2);
+          ctx.fillStyle = '#2a1a30'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eyeOff + lx*eyeSize*0.5, eyeY + ly*eyeSize*0.5, eyeSize*0.55, 0, Math.PI*2);
+          ctx.fillStyle = '#2a1a30'; ctx.fill();
+          ctx.beginPath(); ctx.arc(-eyeOff + lx*eyeSize*0.5 - eyeSize*0.25, eyeY + ly*eyeSize*0.5 - eyeSize*0.25, eyeSize*0.3, 0, Math.PI*2);
+          ctx.fillStyle = 'white'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eyeOff + lx*eyeSize*0.5 - eyeSize*0.25, eyeY + ly*eyeSize*0.5 - eyeSize*0.25, eyeSize*0.3, 0, Math.PI*2);
+          ctx.fillStyle = 'white'; ctx.fill();
+        }
+
+        // Blush
+        ctx.beginPath(); ctx.arc(-eyeOff - size*0.12, eyeY + size*0.1, size*0.08, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,130,180,0.55)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(eyeOff + size*0.12, eyeY + size*0.1, size*0.08, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,130,180,0.55)'; ctx.fill();
+
+        // Antennae with heart tips
+        const a1 = Math.sin(b.antennaPhase)*size*0.1;
+        const a2 = Math.cos(b.antennaPhase)*size*0.1;
+        ctx.strokeStyle = '#3a2545'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-size*0.12, -size*1.0 + hb);
+        ctx.quadraticCurveTo(-size*0.4 + a1, -size*1.4 + hb, -size*0.6 + a1, -size*1.55 + hb); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(size*0.12, -size*1.0 + hb);
+        ctx.quadraticCurveTo(size*0.4 + a2, -size*1.4 + hb, size*0.6 + a2, -size*1.55 + hb); ctx.stroke();
+
+        // Heart tips
+        drawSmallHeart(-size*0.6 + a1, -size*1.55 + hb, size*0.15, '#ff6b9d');
+        drawSmallHeart(size*0.6 + a2, -size*1.55 + hb, size*0.15, '#ff6b9d');
+
+        ctx.restore();
+      }
+
+      function drawSmallHeart(cx, cy, s, color) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.beginPath();
+        ctx.moveTo(0, s*0.3);
+        ctx.bezierCurveTo(-s, -s*0.5, -s*0.9, -s*1.2, 0, -s*0.5);
+        ctx.bezierCurveTo(s*0.9, -s*1.2, s, -s*0.5, 0, s*0.3);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // ========== FLOWERS — beautiful kawaii style ==========
+      function drawFlower(f) {
+        ctx.save();
+        ctx.translate(f.x, f.y);
+        const bounce = Math.sin(f.elapsed * 3.5 + f.bounceOffset) * 2.5;
+        const size = f.size * (1 + Math.sin(f.elapsed * 2.5 + f.bounceOffset) * 0.05);
+        const rot = f.rot + Math.sin(f.elapsed * 1.0 + f.bounceOffset) * 0.08;
+        ctx.translate(0, bounce);
+        ctx.rotate(rot);
+
+        // Glow
+        const gs = f.special ? 2.5 : 2.0;
+        ctx.beginPath(); ctx.arc(0, 0, size * gs, 0, Math.PI * 2);
+        const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, size * gs);
+        gg.addColorStop(0, hexToRgba(f.type.petal2, f.special ? 0.5 : 0.3));
+        gg.addColorStop(1, hexToRgba(f.type.petal2, 0));
+        ctx.fillStyle = gg; ctx.fill();
+
+        const pc = f.type.petalCount;
+        // Back petals (darker)
+        for (let i = 0; i < pc; i++) {
+          const a = (i / pc) * Math.PI * 2;
+          const wig = Math.sin(f.elapsed * 2.5 + i * 1.7) * 0.1;
+          const str = 1 + Math.sin(f.elapsed * 3 + i * 0.9) * 0.06;
+          ctx.save(); ctx.rotate(a + wig);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.bezierCurveTo(-size*0.5, -size*0.6*str, -size*0.45*str, -size*1.35*str, 0, -size*1.45*str);
+          ctx.bezierCurveTo(size*0.45*str, -size*1.35*str, size*0.5, -size*0.6*str, 0, 0);
+          ctx.closePath();
+          ctx.fillStyle = shadeColor(f.type.petal2, -25);
+          ctx.fill();
+          ctx.restore();
+        }
+        // Front petals with gradient
+        for (let i = 0; i < pc; i++) {
+          const a = (i / pc) * Math.PI * 2;
+          const wig = Math.sin(f.elapsed * 2.5 + i * 1.7) * 0.1;
+          const str = 1 + Math.sin(f.elapsed * 3 + i * 0.9) * 0.06;
+          ctx.save(); ctx.rotate(a + wig);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.bezierCurveTo(-size*0.45, -size*0.65*str, -size*0.4*str, -size*1.3*str, 0, -size*1.4*str);
+          ctx.bezierCurveTo(size*0.4*str, -size*1.3*str, size*0.45, -size*0.65*str, 0, 0);
+          ctx.closePath();
+          const pg = ctx.createRadialGradient(0, -size*1.0, size*0.05, 0, -size*0.3, size*1.3);
+          pg.addColorStop(0, '#ffffff');
+          pg.addColorStop(0.3, f.type.petal1);
+          pg.addColorStop(0.75, f.type.petal2);
+          pg.addColorStop(1, shadeColor(f.type.petal2, -35));
+          ctx.fillStyle = pg; ctx.fill();
+          ctx.strokeStyle = hexToRgba(shadeColor(f.type.petal2, -45), 0.5);
+          ctx.lineWidth = 0.8; ctx.stroke();
+          // Petal highlight
+          ctx.beginPath();
+          ctx.ellipse(-size*0.12, -size*0.85*str, size*0.08, size*0.3, -0.15, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fill();
+          ctx.restore();
+        }
+        // Center
+        ctx.beginPath(); ctx.arc(0, 0, size*0.5, 0, Math.PI*2);
+        const cg = ctx.createRadialGradient(-size*0.1, -size*0.1, 0, 0, 0, size*0.5);
+        cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.5, f.type.center); cg.addColorStop(1, f.type.centerDark);
+        ctx.fillStyle = cg; ctx.fill();
+        ctx.strokeStyle = shadeColor(f.type.centerDark, -35);
+        ctx.lineWidth = 1.2; ctx.stroke();
+        // Center dots
+        for (let i = 0; i < 6; i++) {
+          const a = (i/6)*Math.PI*2 + f.elapsed*0.5;
+          ctx.beginPath();
+          ctx.arc(Math.cos(a)*size*0.22, Math.sin(a)*size*0.22, size*0.05, 0, Math.PI*2);
+          ctx.fillStyle = shadeColor(f.type.centerDark, -15); ctx.fill();
+        }
+        // Face
+        const fy = size*0.05, eo = size*0.2, es = size*0.1;
+        const blink = f.blinkTimer < 6;
+        if (blink) {
+          ctx.strokeStyle = '#5a3a4a'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.arc(-eo, fy - size*0.05, es*0.85, 0.2, Math.PI-0.2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(eo, fy - size*0.05, es*0.85, 0.2, Math.PI-0.2); ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(-eo, fy - size*0.05, es, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eo, fy - size*0.05, es, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(-eo, fy - size*0.05, es*0.6, 0, Math.PI*2); ctx.fillStyle = '#3a1a2a'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eo, fy - size*0.05, es*0.6, 0, Math.PI*2); ctx.fillStyle = '#3a1a2a'; ctx.fill();
+          ctx.beginPath(); ctx.arc(-eo - es*0.25, fy - size*0.05 - es*0.25, es*0.3, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+          ctx.beginPath(); ctx.arc(eo - es*0.25, fy - size*0.05 - es*0.25, es*0.3, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+        }
+        // Blush
+        ctx.beginPath(); ctx.arc(-eo - size*0.12, fy + size*0.04, size*0.09, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,130,160,0.55)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(eo + size*0.12, fy + size*0.04, size*0.09, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,130,160,0.55)'; ctx.fill();
+        // Smile
+        ctx.beginPath(); ctx.arc(0, fy + size*0.05, size*0.08, 0.15, Math.PI-0.15);
+        ctx.strokeStyle = '#5a2a3a'; ctx.lineWidth = 1.2; ctx.lineCap = 'round'; ctx.stroke();
+
+        // Golden sparkles
+        if (f.special) {
+          for (let i = 0; i < 5; i++) {
+            const a = (i/5)*Math.PI*2 + f.elapsed*1.5;
+            const r = size*1.5;
+            ctx.font = `${size*0.3}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText('✨', Math.cos(a)*r, Math.sin(a)*r);
+          }
+        }
+        ctx.restore();
+      }
+
+      function hexToRgba(hex, a) {
+        if (hex.startsWith('rgba')) return hex;
+        const r = parseInt(hex.slice(1,3), 16), g = parseInt(hex.slice(3,5), 16), b = parseInt(hex.slice(5,7), 16);
+        return `rgba(${r},${g},${b},${a})`;
+      }
+      function shadeColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+        const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+        const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+      }
+
+      function drawWeb(w) {
+        ctx.save(); ctx.translate(w.x, w.y); ctx.rotate(w.rot);
+        const alpha = w.alpha * (0.7 + Math.sin(w.elapsed * 3) * 0.3);
+        ctx.beginPath(); ctx.arc(0, 0, w.size * 1.1, 0, Math.PI * 2);
+        const glow = ctx.createRadialGradient(0, 0, w.size*0.5, 0, 0, w.size*1.1);
+        glow.addColorStop(0, `rgba(200,200,220,${alpha*0.3})`);
+        glow.addColorStop(1, 'rgba(200,200,220,0)');
+        ctx.fillStyle = glow; ctx.fill();
+        ctx.strokeStyle = `rgba(220,220,240,${alpha})`; ctx.lineWidth = 1.5;
+        for (let i = 1; i <= 4; i++) { ctx.beginPath(); ctx.arc(0, 0, (w.size/4)*i, 0, Math.PI*2); ctx.stroke(); }
+        for (let i = 0; i < 8; i++) {
+          const angle = (i/8)*Math.PI*2;
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(angle)*w.size, Math.sin(angle)*w.size); ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(0, 0, w.size*0.08, 0, Math.PI*2); ctx.fillStyle = `rgba(180,180,210,${alpha})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, w.size*0.04, 0, Math.PI*2); ctx.fillStyle = `rgba(255,255,255,${alpha*0.8})`; ctx.fill();
+        for (let i = 0; i < 3; i++) {
+          const a = (i/3)*Math.PI*2 + w.elapsed*0.5; const r = w.size*0.6;
+          ctx.beginPath(); ctx.arc(Math.cos(a)*r, Math.sin(a)*r, 1.5, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(255,255,255,${alpha*0.7})`; ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawParticles() {
+        particles.forEach(p => {
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.fill(); ctx.globalAlpha = 1;
+        });
+      }
+      function drawSparkles() {
+        sparkles.forEach(s => {
+          const tw = 0.5 + Math.sin(s.phase + gameTime*0.08) * 0.5;
+          ctx.beginPath(); ctx.arc(s.x, s.y, s.size*tw, 0, Math.PI*2);
+          ctx.fillStyle = s.color; ctx.globalAlpha = s.life*tw*0.8; ctx.fill(); ctx.globalAlpha = 1;
+        });
+      }
+      function drawScorePopups() {
+        scorePopups.forEach(p => {
+          ctx.save(); ctx.globalAlpha = p.life;
+          ctx.font = 'bold 20px Quicksand, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillStyle = p.color; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 4;
+          ctx.strokeText(p.text, p.x, p.y); ctx.fillText(p.text, p.x, p.y); ctx.restore();
+        });
+      }
+
+      function spawnFlower() {
+        const type = FLOWER_TYPES[Math.floor(Math.random()*FLOWER_TYPES.length)];
+        const margin = 55;
+        const f = {
+          x: margin + Math.random()*(W-margin*2), y: margin + Math.random()*(H-margin*2),
+          size: 16 + Math.random()*5, type, rot: Math.random()*Math.PI*2,
+          elapsed: 0, life: 1, fadeIn: 0, special: !!type.special,
+          bounceOffset: Math.random()*Math.PI*2, blinkTimer: 60 + Math.random()*120
+        };
+        const dx = f.x - butterfly.x, dy = f.y - butterfly.y;
+        if (Math.sqrt(dx*dx+dy*dy) < 100) { f.x = margin + Math.random()*(W-margin*2); f.y = margin + Math.random()*(H-margin*2); }
+        flowers.push(f);
+      }
+      function spawnWeb() {
+        const side = Math.floor(Math.random()*4); let x, y, vx, vy;
+        const speed = 0.4 + Math.random()*0.6 + gameTime*0.008;
+        if (side===0) { x=Math.random()*W; y=-40; vx=(Math.random()-0.5)*speed; vy=speed; }
+        else if (side===1) { x=W+40; y=Math.random()*H; vx=-speed; vy=(Math.random()-0.5)*speed; }
+        else if (side===2) { x=Math.random()*W; y=H+40; vx=(Math.random()-0.5)*speed; vy=-speed; }
+        else { x=-40; y=Math.random()*H; vx=speed; vy=(Math.random()-0.5)*speed; }
+        webs.push({ x, y, vx, vy, size: 28+Math.random()*18, rot: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.02, elapsed: 0, alpha: 0, life: 1 });
+      }
+      function checkFlowerCollect() {
+        for (let i = flowers.length-1; i >= 0; i--) {
+          const f = flowers[i];
+          const dx = f.x - butterfly.x, dy = f.y - butterfly.y;
+          if (Math.sqrt(dx*dx+dy*dy) < f.size + 14) { collectFlower(f); flowers.splice(i, 1); }
+        }
+      }
+      function collectFlower(f) {
+        state.combo++; state.comboTimer = 90;
+        let points = f.type.points;
+        if (state.combo > 1) points += 5 * (state.combo - 1);
+        state.score += points;
+        scorePopups.push({ x: f.x, y: f.y-20, text: `+${points}`, color: f.special ? '#ffb800' : '#ff6ba6', life: 1 });
+        for (let i = 0; i < 14; i++) {
+          const angle = (i/14)*Math.PI*2 + Math.random()*0.5;
+          particles.push({
+            x: f.x, y: f.y, vx: Math.cos(angle)*(2+Math.random()*3), vy: Math.sin(angle)*(2+Math.random()*3)-1,
+            r: 4+Math.random()*3, color: f.special ? '#ffd700' : f.type.petal2, life: 1,
+            emoji: ['💗','✨','🌸','💫','🌟'][Math.floor(Math.random()*5)], isEmoji: true
+          });
+        }
+        if (f.special) playSound('golden'); else playSound('collect', Math.min(state.combo, 10));
+        scoreChip.classList.add('pulse'); setTimeout(() => scoreChip.classList.remove('pulse'), 300);
+        comboChip.classList.add('pulse'); setTimeout(() => comboChip.classList.remove('pulse'), 300);
+        updateComboMeter(); updateHUD();
+      }
+      function checkWebCollision() {
+        if (butterfly.invulnerable > 0) return;
+        for (let i = webs.length-1; i >= 0; i--) {
+          const w = webs[i];
+          const dx = w.x - butterfly.x, dy = w.y - butterfly.y;
+          if (Math.sqrt(dx*dx+dy*dy) < w.size*0.8 + 12) {
+            state.lives--; state.combo = 0; butterfly.invulnerable = 90; playSound('web');
+            const angle = Math.atan2(dy, dx);
+            butterfly.vx = Math.cos(angle)*8; butterfly.vy = Math.sin(angle)*8;
+            for (let k = 0; k < 20; k++) {
+              const a = Math.random()*Math.PI*2;
+              particles.push({ x: butterfly.x, y: butterfly.y, vx: Math.cos(a)*(3+Math.random()*5), vy: Math.sin(a)*(3+Math.random()*5), r: 3+Math.random()*4, color: '#c8c8e0', life: 1 });
+            }
+            webs.splice(i, 1);
+            livesChip.classList.add('pulse'); setTimeout(() => livesChip.classList.remove('pulse'), 300);
+            updateComboMeter(); updateHUD();
+            if (state.lives <= 0) endGame();
+            break;
+          }
+        }
+      }
+      function updateComboMeter() {
+        if (state.combo > 1) { comboMeter.classList.add('show'); comboMeter.textContent = `✨ combo x${state.combo}`; }
+        else { comboMeter.classList.remove('show'); }
+      }
+      function endGame() {
+        state.running = false; state.gameOver = true; playSound('gameover');
+        const isNewHigh = state.score > state.highScore;
+        if (isNewHigh) { state.highScore = state.score; try { localStorage.setItem(STORAGE_KEY, state.highScore.toString()); } catch (e) {} }
+        finalScoreEl.textContent = state.score;
+        gameoverTitle.textContent = 'caught in a web! 🕸️';
+        badgeContainer.innerHTML = '';
+        if (isNewHigh && state.score > 0) {
+          const b = document.createElement('div'); b.className = 'high-score-badge'; b.textContent = '🏆 new high score!'; badgeContainer.appendChild(b);
+        } else if (state.highScore > 0) {
+          const b = document.createElement('div'); b.className = 'high-score-badge';
+          b.style.background = 'linear-gradient(135deg, #e0e0e0, #c0c0c0)'; b.style.color = '#555';
+          b.textContent = `best: ${state.highScore}`; badgeContainer.appendChild(b);
+        }
+        gameoverOverlay.classList.remove('hidden');
+      }
+      function updateHUD() {
+        scoreValue.textContent = state.score; comboValue.textContent = state.combo;
+        livesValue.textContent = '❤'.repeat(Math.max(0, state.lives)) + '♡'.repeat(Math.max(0, 3-state.lives));
+      }
+
+      let mouseActive = false, mouseX = W/2, mouseY = H/2, keys = {};
+      function handleMouseMove(e) {
+        const r = canvas.getBoundingClientRect();
+        mouseX = (e.clientX-r.left)*(W/r.width); mouseY = (e.clientY-r.top)*(H/r.height); mouseActive = true;
+      }
+      function handleTouchMove(e) {
+        if (e.touches.length > 0) {
+          const r = canvas.getBoundingClientRect();
+          mouseX = (e.touches[0].clientX-r.left)*(W/r.width); mouseY = (e.touches[0].clientY-r.top)*(H/r.height);
+          mouseActive = true; e.preventDefault();
+        }
+      }
+      function handleKeyDown(e) {
+        keys[e.key] = true;
+        if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) { mouseActive = false; e.preventDefault(); }
+      }
+      function handleKeyUp(e) { keys[e.key] = false; }
+      function updateKeyboardInput() {
+        if (!state.running) return;
+        const speed = 5; let dx = 0, dy = 0;
+        if (keys['ArrowLeft']) dx -= speed;
+        if (keys['ArrowRight']) dx += speed;
+        if (keys['ArrowUp']) dy -= speed;
+        if (keys['ArrowDown']) dy += speed;
+        if (dx !== 0 || dy !== 0) {
+          butterfly.targetX = Math.max(20, Math.min(W-20, butterfly.targetX + dx));
+          butterfly.targetY = Math.max(20, Math.min(H-20, butterfly.targetY + dy));
+        }
+        if (keys[' ']) butterfly.boost = 15;
+      }
+
+      function gameLoop() {
+        if (state.running && !state.paused) update();
+        render();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function update() {
+        gameTime++;
+        if (mouseActive) { butterfly.targetX = mouseX; butterfly.targetY = mouseY; }
+        updateKeyboardInput();
+        const fs = butterfly.boost > 0 ? 0.28 : 0.15;
+        butterfly.vx += (butterfly.targetX - butterfly.x) * fs * 0.15;
+        butterfly.vy += (butterfly.targetY - butterfly.y) * fs * 0.15;
+        butterfly.vx *= 0.88; butterfly.vy *= 0.88;
+        const maxS = butterfly.boost > 0 ? 14 : 9;
+        const spd = Math.sqrt(butterfly.vx*butterfly.vx + butterfly.vy*butterfly.vy);
+        if (spd > maxS) { butterfly.vx = (butterfly.vx/spd)*maxS; butterfly.vy = (butterfly.vy/spd)*maxS; }
+        butterfly.x += butterfly.vx; butterfly.y += butterfly.vy;
+        butterfly.x = Math.max(15, Math.min(W-15, butterfly.x)); butterfly.y = Math.max(15, Math.min(H-15, butterfly.y));
+        if (Math.abs(butterfly.vx) > 0.3) {
+          const ta = butterfly.vx > 0 ? 0.25 : -0.25;
+          butterfly.angle += (ta - butterfly.angle) * 0.1;
+        }
+        butterfly.wingPhase += 0.35 + spd*0.03;
+        butterfly.bobPhase += 0.08; butterfly.headBob += 0.1; butterfly.antennaPhase += 0.13;
+        if (butterfly.boost > 0) butterfly.boost--;
+        if (butterfly.invulnerable > 0) butterfly.invulnerable--;
+        butterfly.blinkTimer--;
+        if (butterfly.blinkTimer <= 0) {
+          butterfly.isBlinking = !butterfly.isBlinking;
+          butterfly.blinkTimer = butterfly.isBlinking ? 8 : (100 + Math.random()*160);
+        }
+        if (gameTime % 2 === 0 && spd > 1) {
+          butterfly.trail.push({ x: butterfly.x+(Math.random()-0.5)*6, y: butterfly.y+(Math.random()-0.5)*6, life: 1, size: 2+Math.random()*2, hue: Math.random()*120+240 });
+        }
+        butterfly.trail.forEach(t => t.life -= 0.035);
+        butterfly.trail = butterfly.trail.filter(t => t.life > 0);
+        if (butterfly.trail.length > 18) butterfly.trail.shift();
+        if (state.comboTimer > 0) {
+          state.comboTimer--;
+          if (state.comboTimer === 0 && state.combo > 0) { state.combo = 0; updateComboMeter(); updateHUD(); }
+        }
+        spawnTimer++;
+        if (spawnTimer >= Math.max(35, 75 - gameTime*0.02)) { spawnTimer = 0; if (flowers.length < 5) spawnFlower(); }
+        flowers.forEach(f => { f.elapsed += 0.016; if (f.fadeIn < 1) f.fadeIn += 0.05; f.blinkTimer--; if (f.blinkTimer < 0) f.blinkTimer = 60 + Math.random()*120; });
+        webSpawnTimer++;
+        if (webSpawnTimer >= Math.max(50, webSpawnInterval - gameTime*0.3)) { webSpawnTimer = 0; if (webs.length < 6) spawnWeb(); }
+        webs.forEach(w => {
+          w.x += w.vx; w.y += w.vy; w.rot += w.rotSpeed; w.elapsed += 0.016;
+          if (w.alpha < 1) w.alpha += 0.04;
+          if (w.life > 0) w.life -= 0.001;
+          if (gameTime > 300) {
+            const dx = butterfly.x - w.x, dy = butterfly.y - w.y;
+            const d = Math.sqrt(dx*dx+dy*dy) || 1;
+            w.vx += (dx/d)*0.002; w.vy += (dy/d)*0.002;
+          }
+        });
+        webs = webs.filter(w => w.x > -100 && w.x < W+100 && w.y > -100 && w.y < H+100 && w.life > 0);
+        flowers = flowers.filter(f => { f.life -= 0.008; return f.life > 0; });
+        checkFlowerCollect(); checkWebCollision();
+        spawnAmbientSparkles();
+        sparkles.forEach(s => { s.x += s.vx + Math.sin(s.phase+gameTime*0.05)*0.3; s.y += s.vy; s.life -= 0.005; s.phase += 0.05; });
+        sparkles = sparkles.filter(s => s.life > 0 && s.y > -20);
+        particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vx *= 0.96; p.vy *= 0.96; p.vy += 0.05; p.life -= 0.02; });
+        particles = particles.filter(p => p.life > 0);
+        scorePopups.forEach(p => { p.y -= 1.2; p.life -= 0.018; });
+        scorePopups = scorePopups.filter(p => p.life > 0);
+      }
+
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, H);
+        bg.addColorStop(0, '#e8f8f0'); bg.addColorStop(0.5, '#f0e8ff'); bg.addColorStop(1, '#ffe8f4');
+        ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+        const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.85);
+        vig.addColorStop(0, 'rgba(255,255,255,0)'); vig.addColorStop(1, 'rgba(200,180,220,0.15)');
+        ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+        ctx.globalAlpha = 0.03; ctx.strokeStyle = '#9c6bd4'; ctx.lineWidth = 1;
+        for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+        for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+        butterfly.trail.forEach(t => {
+          ctx.beginPath(); ctx.arc(t.x, t.y, t.size*t.life, 0, Math.PI*2);
+          ctx.fillStyle = `hsla(${t.hue},100%,80%,${t.life*0.5})`; ctx.fill();
+        });
+        drawSparkles();
+        flowers.forEach(f => { ctx.globalAlpha = f.fadeIn * Math.min(1, f.life*2); drawFlower(f); ctx.globalAlpha = 1; });
+        webs.forEach(w => { ctx.globalAlpha = Math.min(w.alpha, w.life); drawWeb(w); ctx.globalAlpha = 1; });
+        drawButterfly();
+        particles.forEach(p => {
+          if (p.isEmoji) {
+            ctx.globalAlpha = p.life; ctx.font = `${p.r*3}px sans-serif`; ctx.textAlign = 'center';
+            ctx.fillText(p.emoji, p.x, p.y); ctx.globalAlpha = 1;
+          } else {
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.fill(); ctx.globalAlpha = 1;
+          }
+        });
+        drawScorePopups();
+      }
+
+      function startGame() {
+        initAudio(); state.running = true; state.paused = false; state.gameOver = false;
+        state.score = 0; state.combo = 0; state.comboTimer = 0; state.lives = 3;
+        butterfly.x = W/2; butterfly.y = H/2; butterfly.vx = 0; butterfly.vy = 0;
+        butterfly.targetX = W/2; butterfly.targetY = H/2; butterfly.trail = [];
+        butterfly.invulnerable = 0; butterfly.boost = 0;
+        flowers = []; webs = []; particles = []; sparkles = []; scorePopups = [];
+        gameTime = 0; spawnTimer = 0; webSpawnTimer = 0;
+        for (let i = 0; i < 3; i++) spawnFlower();
+        updateHUD(); updateComboMeter();
+        startOverlay.classList.add('hidden'); gameoverOverlay.classList.add('hidden');
+        pauseBtn.textContent = '⏸ pause';
+      }
+      function togglePause() {
+        if (!state.running) return;
+        state.paused = !state.paused;
+        pauseBtn.textContent = state.paused ? '▶ resume' : '⏸ pause';
+      }
+      function resetGame() {
+        state.running = false; state.paused = false; state.gameOver = false;
+        state.score = 0; state.combo = 0; state.lives = 3;
+        flowers = []; webs = []; particles = []; sparkles = []; scorePopups = [];
+        butterfly.trail = [];
+        updateHUD(); updateComboMeter();
+        startOverlay.classList.remove('hidden'); gameoverOverlay.classList.add('hidden');
+        pauseBtn.textContent = '⏸ pause'; ctx.clearRect(0, 0, W, H);
+      }
+      function toggleGuide() {
+        const open = guidePanel.classList.toggle('open');
+        guideToggle.classList.toggle('active', open); card.classList.toggle('guide-open', open);
+        guideToggle.textContent = open ? '✕' : '?';
+      }
+
+      function setupEvents() {
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchstart', (e) => { handleTouchMove(e); initAudio(); }, { passive: false });
+        canvas.addEventListener('click', () => initAudio());
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('keyup', handleKeyUp);
+        startBtn.addEventListener('click', () => startGame());
+        playAgainBtn.addEventListener('click', () => { resetGame(); setTimeout(startGame, 100); });
+        pauseBtn.addEventListener('click', togglePause);
+        resetBtn.addEventListener('click', resetGame);
+        guideToggle.addEventListener('click', toggleGuide);
+        guideFootBtn.addEventListener('click', toggleGuide);
+        soundToggle.addEventListener('click', () => {
+          state.soundEnabled = !state.soundEnabled;
+          soundToggle.textContent = state.soundEnabled ? '🔊' : '🔇';
+          soundToggle.style.opacity = state.soundEnabled ? '1' : '0.5';
+          if (state.soundEnabled) initAudio();
+        });
+        window.addEventListener('keydown', (e) => { if (e.key === ' ' && state.running) e.preventDefault(); });
+      }
+
+      function init() {
+        createBgDecor(); setupEvents(); updateHUD();
+        ctx.clearRect(0, 0, W, H);
+        requestAnimationFrame(gameLoop);
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+      else init();
+    })();
+  </script>
+</body>
+</html>

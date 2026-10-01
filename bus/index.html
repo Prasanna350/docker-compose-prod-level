@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✧ blob · virtual pet ✧</title>
+  <style>
+    /* ---------- RESET & GLOBAL ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="%23ffb3c6" opacity="0.5"/><circle cx="16" cy="16" r="7" fill="%23ff8fb1"/><circle cx="12" cy="12" r="2" fill="white"/><circle cx="20" cy="12" r="2" fill="white"/><circle cx="16" cy="20" r="2" fill="%23ff4d6d"/></svg>') 16 16, auto;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #ffe9f4 0%, #ffe0f0 40%, #ffd9e8 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', 'Quicksand', system-ui, -apple-system, sans-serif;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* floating hearts background */
+    .floating-hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .floating-hearts span {
+      position: absolute;
+      display: block;
+      font-size: 1.8rem;
+      opacity: 0.4;
+      animation: floatUp 9s linear infinite;
+      user-select: none;
+      filter: drop-shadow(0 0 6px rgba(255, 105, 180, 0.4));
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(110vh) rotate(0deg) scale(0.8);
+        opacity: 0.2;
+      }
+      70% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(-20vh) rotate(360deg) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    /* main card */
+    .cute-card {
+      position: relative;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 55px;
+      box-shadow: 0 20px 40px rgba(255, 140, 200, 0.25),
+                  0 8px 20px rgba(255, 105, 180, 0.15),
+                  inset 0 2px 8px rgba(255, 255, 255, 0.8);
+      padding: 2.5rem 2.5rem 2.8rem;
+      max-width: 720px;
+      width: 100%;
+      border: 3px solid rgba(255, 255, 255, 0.6);
+      animation: cardPop 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      text-align: center;
+      transition: box-shadow 0.3s;
+    }
+
+    .cute-card:hover {
+      box-shadow: 0 25px 50px rgba(255, 120, 180, 0.4), 0 10px 30px rgba(255, 80, 150, 0.2);
+    }
+
+    @keyframes cardPop {
+      0% { opacity: 0; transform: scale(0.7) translateY(40px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .ears {
+      position: absolute;
+      top: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      font-size: 3rem;
+      filter: drop-shadow(0 8px 12px rgba(255, 100, 150, 0.3));
+      animation: bounceEars 3s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    @keyframes bounceEars {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff7eb3, #ff8fb1, #ffb3c6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.2rem;
+      text-shadow: 0 4px 12px rgba(255, 160, 200, 0.5);
+    }
+
+    .subhead {
+      font-size: 1.05rem;
+      color: #b34e7a;
+      font-weight: 500;
+      margin-bottom: 1.8rem;
+      background: rgba(255, 240, 245, 0.7);
+      display: inline-block;
+      padding: 0.4rem 1.6rem;
+      border-radius: 50px;
+      border: 1px solid #ffe2ef;
+      box-shadow: 0 4px 8px rgba(255, 192, 203, 0.3);
+      animation: softGlow 3s infinite alternate;
+    }
+
+    @keyframes softGlow {
+      0% { box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3); }
+      100% { box-shadow: 0 4px 20px rgba(255, 105, 180, 0.6); }
+    }
+
+    /* ---------- PET AREA ---------- */
+    .pet-area {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      margin: 0.5rem 0 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    /* ground / shadow */
+    .pet-shadow {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 26px;
+      background: radial-gradient(ellipse, rgba(255, 160, 200, 0.5), transparent 70%);
+      border-radius: 50%;
+      filter: blur(4px);
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+
+    /* blob body */
+    .blob {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 150px;
+      background: radial-gradient(circle at 35% 30%, #ffc2d6, #ff9eb8 60%, #ff8aad);
+      border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+      box-shadow: 
+        inset -8px -8px 16px rgba(200, 60, 120, 0.25),
+        inset 6px 6px 14px rgba(255, 255, 255, 0.6),
+        0 12px 24px rgba(255, 120, 180, 0.35);
+      transition: transform 0.15s ease-out, border-radius 0.4s;
+      z-index: 5;
+      animation: blobBob 3s ease-in-out infinite;
+    }
+
+    @keyframes blobBob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-8px); }
+    }
+
+    /* squish on hover */
+    .blob:hover {
+      border-radius: 55% 55% 50% 50% / 65% 65% 38% 38%;
+    }
+
+    /* eyes */
+    .eyes {
+      position: absolute;
+      top: 42%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 26px;
+      z-index: 6;
+    }
+
+    .eye {
+      width: 24px;
+      height: 28px;
+      background: #3d1f2c;
+      border-radius: 50%;
+      position: relative;
+      transition: height 0.1s ease, transform 0.1s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .eye::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 6px;
+      width: 8px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.9;
+    }
+
+    .eye.closed {
+      height: 4px;
+      border-radius: 4px;
+      margin-top: 12px;
+    }
+
+    .eye.closed::after {
+      display: none;
+    }
+
+    /* blush */
+    .blush {
+      position: absolute;
+      top: 56%;
+      width: 22px;
+      height: 12px;
+      background: rgba(255, 90, 130, 0.35);
+      border-radius: 50%;
+      filter: blur(1px);
+      z-index: 6;
+    }
+
+    .blush.left { left: 22px; }
+    .blush.right { right: 22px; }
+
+    /* mouth */
+    .mouth {
+      position: absolute;
+      bottom: 26%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 14px;
+      border: 3px solid #3d1f2c;
+      border-top: none;
+      border-radius: 0 0 24px 24px;
+      z-index: 6;
+      transition: all 0.3s;
+    }
+
+    .mouth.happy {
+      width: 34px;
+      height: 18px;
+      border-radius: 0 0 34px 34px;
+    }
+
+    .mouth.sad {
+      width: 20px;
+      height: 10px;
+      border-radius: 20px 20px 0 0;
+      border: 3px solid #3d1f2c;
+      border-bottom: none;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* tongue for eating */
+    .tongue {
+      position: absolute;
+      bottom: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 0;
+      background: #ff7b9c;
+      border-radius: 0 0 16px 16px;
+      z-index: 7;
+      transition: height 0.3s;
+    }
+
+    .tongue.show {
+      height: 14px;
+    }
+
+    /* food particle animation */
+    .food-particle {
+      position: fixed;
+      font-size: 2rem;
+      pointer-events: none;
+      z-index: 100;
+      animation: foodDrop 0.8s ease-out forwards;
+    }
+
+    @keyframes foodDrop {
+      0% { opacity: 1; transform: translateY(-40px) scale(1.2) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(60px) scale(0.5) rotate(180deg); }
+    }
+
+    .heart-particle {
+      position: fixed;
+      font-size: 1.8rem;
+      pointer-events: none;
+      z-index: 100;
+      animation: heartFloat 1.2s ease-out forwards;
+    }
+
+    @keyframes heartFloat {
+      0% { opacity: 1; transform: translateY(0) scale(0.6); }
+      100% { opacity: 0; transform: translateY(-100px) scale(1.4); }
+    }
+
+    /* ---------- STATS ---------- */
+    .stats-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin: 0.5rem auto 1.6rem;
+      max-width: 420px;
+      background: rgba(255, 245, 250, 0.7);
+      padding: 1.2rem 1.5rem;
+      border-radius: 30px;
+      border: 2px solid #ffe2ef;
+      box-shadow: 0 6px 14px rgba(255, 180, 210, 0.25);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1rem;
+      color: #9d4468;
+      font-weight: 600;
+    }
+
+    .stat-label {
+      min-width: 70px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-bar-bg {
+      flex: 1;
+      height: 16px;
+      background: #ffe0ee;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(200, 100, 150, 0.15);
+    }
+
+    .stat-bar-fill {
+      height: 100%;
+      border-radius: 20px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5) inset;
+    }
+
+    .hunger-fill {
+      background: linear-gradient(90deg, #ffb07c, #ff8a5c);
+    }
+
+    .happiness-fill {
+      background: linear-gradient(90deg, #ff9ec7, #ff6ba6);
+    }
+
+    .energy-fill {
+      background: linear-gradient(90deg, #a8e6cf, #6dd5b0);
+    }
+
+    .stat-value {
+      min-width: 48px;
+      text-align: right;
+      font-size: 0.9rem;
+      color: #b05b7e;
+    }
+
+    /* ---------- BUTTONS ---------- */
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .cute-btn {
+      background: #ffb3c6;
+      border: 2px solid #fff7fb;
+      padding: 0.85rem 1.5rem;
+      border-radius: 50px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff0f5;
+      text-shadow: 0 2px 6px rgba(255, 80, 140, 0.6);
+      letter-spacing: 0.3px;
+      box-shadow: 0 6px 0 #d46b8c, 0 10px 22px rgba(255, 120, 180, 0.4);
+      cursor: pointer;
+      transition: all 0.1s cubic-bezier(0.2, 0.9, 0.4, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(0);
+      user-select: none;
+      font-family: inherit;
+    }
+
+    .cute-btn:active {
+      transform: translateY(6px);
+      box-shadow: 0 0px 0 #d46b8c, 0 10px 22px rgba(255, 120, 180, 0.4);
+    }
+
+    .cute-btn:hover {
+      background: #ffa5bb;
+      box-shadow: 0 6px 0 #c95d7e, 0 14px 26px rgba(255, 100, 160, 0.55);
+    }
+
+    .cute-btn.secondary {
+      background: #ffd6e8;
+      color: #b04e78;
+      text-shadow: none;
+      box-shadow: 0 6px 0 #e0a8c0, 0 10px 22px rgba(255, 150, 190, 0.4);
+    }
+
+    .cute-btn.secondary:hover {
+      background: #ffc8de;
+      box-shadow: 0 6px 0 #d494b0, 0 14px 26px rgba(255, 130, 175, 0.55);
+    }
+
+    .cute-btn.secondary:active {
+      box-shadow: 0 0px 0 #e0a8c0, 0 10px 22px rgba(255, 150, 190, 0.4);
+    }
+
+    /* message bubble */
+    .message-bubble {
+      background: #fff9fc;
+      border-radius: 40px 40px 40px 12px;
+      padding: 1rem 1.8rem;
+      font-size: 1.15rem;
+      color: #9d4468;
+      font-weight: 600;
+      max-width: 90%;
+      min-height: 3.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 2px dashed #ffb8d0;
+      box-shadow: 0 8px 18px rgba(255, 180, 200, 0.3);
+      margin: 0 auto;
+      transition: all 0.3s ease;
+      word-break: break-word;
+      animation: bubblePop 0.4s ease-out;
+    }
+
+    @keyframes bubblePop {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* footer */
+    .footer-note {
+      margin-top: 1.6rem;
+      color: #c27b9b;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      opacity: 0.85;
+    }
+
+    .footer-note i {
+      font-style: normal;
+      animation: sparkle 1.8s infinite;
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* responsive */
+    @media (max-width: 520px) {
+      .cute-card { padding: 2rem 1.2rem; border-radius: 40px; }
+      h1 { font-size: 1.9rem; }
+      .blob { width: 130px; height: 122px; }
+      .eyes { gap: 20px; }
+      .eye { width: 20px; height: 24px; }
+      .eye::after { width: 7px; height: 8px; top: 4px; left: 5px; }
+      .pet-area { height: 200px; }
+      .cute-btn { font-size: 0.95rem; padding: 0.7rem 1.1rem; }
+    }
+
+    /* cursor-following tongue indicator (when hungry) */
+    .pet-area.hungry .blob {
+      animation: blobBob 3s ease-in-out infinite, hungryShake 0.5s ease-in-out infinite;
+    }
+
+    @keyframes hungryShake {
+      0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+      25% { transform: translateX(-50%) translateY(-8px) rotate(-2deg); }
+      75% { transform: translateX(-50%) translateY(-8px) rotate(2deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- floating background hearts -->
+  <div class="floating-hearts" id="floatingHearts"></div>
+
+  <!-- main card -->
+  <div class="cute-card">
+    <div class="ears">
+      <span>🌸</span>
+      <span>🎀</span>
+      <span>🌸</span>
+    </div>
+
+    <h1>blobby ✧</h1>
+    <div class="subhead">your little blob friend</div>
+
+    <!-- pet area -->
+    <div class="pet-area" id="petArea">
+      <div class="pet-shadow" id="petShadow"></div>
+
+      <div class="blob" id="blob">
+        <div class="blush left"></div>
+        <div class="blush right"></div>
+
+        <div class="eyes" id="eyes">
+          <div class="eye" id="eyeLeft"></div>
+          <div class="eye" id="eyeRight"></div>
+        </div>
+
+        <div class="mouth" id="mouth"></div>
+        <div class="tongue" id="tongue"></div>
+      </div>
+    </div>
+
+    <!-- stats -->
+    <div class="stats-panel">
+      <div class="stat-row">
+        <div class="stat-label">🍖 fullness</div>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill hunger-fill" id="hungerBar" style="width: 70%"></div>
+        </div>
+        <div class="stat-value" id="hungerValue">70%</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">💖 happiness</div>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill happiness-fill" id="happinessBar" style="width: 80%"></div>
+        </div>
+        <div class="stat-value" id="happinessValue">80%</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">⚡ energy</div>
+        <div class="stat-bar-bg">
+          <div class="stat-bar-fill energy-fill" id="energyBar" style="width: 90%"></div>
+        </div>
+        <div class="stat-value" id="energyValue">90%</div>
+      </div>
+    </div>
+
+    <!-- action buttons -->
+    <div class="button-row">
+      <button class="cute-btn" id="feedBtn"><span>🍎</span> feed</button>
+      <button class="cute-btn secondary" id="playBtn"><span>🎾</span> play</button>
+      <button class="cute-btn secondary" id="restBtn"><span>💤</span> rest</button>
+    </div>
+
+    <!-- message bubble -->
+    <div class="message-bubble" id="messageBubble">
+      hi! i'm blobby 🌸 move your mouse around!
+    </div>
+
+    <div class="footer-note">
+      <i>✦</i> your blob remembers everything <i>✦</i>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ========== STATE ==========
+      const STORAGE_KEY = 'blobby_virtual_pet_v1';
+
+      // Default state
+      const defaultState = {
+        hunger: 70,      // 0 = starving, 100 = full
+        happiness: 80,   // 0 = sad, 100 = happy
+        energy: 90,      // 0 = tired, 100 = energetic
+        lastUpdate: Date.now(),
+        totalFeeds: 0,
+        totalPlays: 0,
+        name: 'blobby'
+      };
+
+      let state = { ...defaultState };
+
+      // Load from localStorage
+      function loadState() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            state = { ...defaultState, ...parsed };
+            // Apply time decay based on time away
+            applyTimeDecay();
+          }
+        } catch (e) {
+          console.warn('Could not load state', e);
+        }
+      }
+
+      // Save to localStorage
+      function saveState() {
+        state.lastUpdate = Date.now();
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.warn('Could not save state', e);
+        }
+      }
+
+      // Time-based decay: pet gets hungrier/tired over time
+      function applyTimeDecay() {
+        const now = Date.now();
+        const elapsedMinutes = (now - state.lastUpdate) / 60000;
+
+        if (elapsedMinutes > 0.5) {
+          // Hunger decreases ~2 per minute, capped
+          const hungerLoss = Math.min(elapsedMinutes * 2, 60);
+          const energyLoss = Math.min(elapsedMinutes * 1.5, 50);
+          const happinessLoss = Math.min(elapsedMinutes * 0.8, 30);
+
+          state.hunger = Math.max(10, state.hunger - hungerLoss);
+          state.energy = Math.max(10, state.energy - energyLoss);
+          state.happiness = Math.max(10, state.happiness - happinessLoss);
+
+          clampStats();
+        }
+      }
+
+      // Clamp all stats between 0-100
+      function clampStats() {
+        state.hunger = Math.max(0, Math.min(100, Math.round(state.hunger)));
+        state.happiness = Math.max(0, Math.min(100, Math.round(state.happiness)));
+        state.energy = Math.max(0, Math.min(100, Math.round(state.energy)));
+      }
+
+      // ========== DOM REFS ==========
+      const blobEl = document.getElementById('blob');
+      const petArea = document.getElementById('petArea');
+      const eyeLeft = document.getElementById('eyeLeft');
+      const eyeRight = document.getElementById('eyeRight');
+      const mouth = document.getElementById('mouth');
+      const tongue = document.getElementById('tongue');
+      const messageBubble = document.getElementById('messageBubble');
+
+      const hungerBar = document.getElementById('hungerBar');
+      const happinessBar = document.getElementById('happinessBar');
+      const energyBar = document.getElementById('energyBar');
+      const hungerValue = document.getElementById('hungerValue');
+      const happinessValue = document.getElementById('happinessValue');
+      const energyValue = document.getElementById('energyValue');
+
+      const feedBtn = document.getElementById('feedBtn');
+      const playBtn = document.getElementById('playBtn');
+      const restBtn = document.getElementById('restBtn');
+
+      // ========== FLOATING HEARTS BG ==========
+      function createFloatingHearts() {
+        const container = document.getElementById('floatingHearts');
+        const hearts = ['🌸', '💕', '✨', '🎀', '💖', '🌸', '⭐', '💗'];
+        const count = 14;
+
+        for (let i = 0; i < count; i++) {
+          const span = document.createElement('span');
+          span.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+          span.style.left = Math.random() * 100 + '%';
+          span.style.animationDuration = (6 + Math.random() * 6) + 's';
+          span.style.animationDelay = (Math.random() * 8) + 's';
+          span.style.fontSize = (1.2 + Math.random() * 1.5) + 'rem';
+          container.appendChild(span);
+        }
+      }
+
+      // ========== PET FOLLOWS CURSOR ==========
+      let mouseX = 0, mouseY = 0;
+      let currentX = 0, currentY = 0;
+      let targetX = 0, targetY = 0;
+      let isBlinking = false;
+      let blinkTimer = null;
+      let animFrame = null;
+
+      function handleMouseMove(e) {
+        const rect = petArea.getBoundingClientRect();
+        // Normalize mouse position relative to pet area center
+        mouseX = (e.clientX - rect.left) / rect.width;  // 0..1
+        mouseY = (e.clientY - rect.top) / rect.height;   // 0..1
+      }
+
+      function handleTouchMove(e) {
+        if (e.touches.length > 0) {
+          const rect = petArea.getBoundingClientRect();
+          mouseX = (e.touches[0].clientX - rect.left) / rect.width;
+          mouseY = (e.touches[0].clientY - rect.top) / rect.height;
+        }
+      }
+
+      // Smooth follow animation
+      function followLoop() {
+        // Target offset based on mouse position (only if mouse is in/near pet area)
+        if (mouseX !== 0 || mouseY !== 0) {
+          // Translate to range -25 to 25 px
+          targetX = (mouseX - 0.5) * 50;
+          targetY = (mouseY - 0.5) * 30;
+        } else {
+          targetX = 0;
+          targetY = 0;
+        }
+
+        // Smooth lerp
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+
+        // Apply follow transform (combine with bob animation via nested elements not possible, so we use CSS var)
+        // Instead we apply translate on top of the blob's existing translateX(-50%)
+        // We'll adjust the margin-left/translateX approach: use transform on blob but keep bob animation
+        // Solution: use two wrappers — but simpler: override animation with a composed transform.
+        // We'll set a CSS custom property and use it in the animation.
+        blobEl.style.setProperty('--follow-x', currentX + 'px');
+        blobEl.style.setProperty('--follow-y', currentY + 'px');
+
+        // Update eye pupils direction (looking at cursor)
+        const eyeOffsetX = Math.max(-4, Math.min(4, (mouseX - 0.5) * 8));
+        const eyeOffsetY = Math.max(-3, Math.min(3, (mouseY - 0.5) * 6));
+        if (!isBlinking) {
+          const pupils = document.querySelectorAll('.eye::after');
+          // Can't style pseudo-elements directly; we'll shift the eyes container slightly
+          // Alternative: shift the eyes group
+          const eyesEl = document.getElementById('eyes');
+          eyesEl.style.transform = `translateX(calc(-50% + ${eyeOffsetX}px)) translateY(${eyeOffsetY}px)`;
+        }
+
+        animFrame = requestAnimationFrame(followLoop);
+      }
+
+      // Update blob CSS to use the follow variables in animation
+      // We'll inject a style tag for the animation keyframes that incorporate follow
+      function injectFollowAnimation() {
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes blobBobFollow {
+            0%, 100% { transform: translateX(calc(-50% + var(--follow-x, 0px))) translateY(var(--follow-y, 0px)); }
+            50% { transform: translateX(calc(-50% + var(--follow-x, 0px))) translateY(calc(var(--follow-y, 0px) - 8px)); }
+          }
+          .blob {
+            animation: blobBobFollow 3s ease-in-out infinite !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // ========== BLINKING ==========
+      function startBlinking() {
+        function blink() {
+          isBlinking = true;
+          eyeLeft.classList.add('closed');
+          eyeRight.classList.add('closed');
+          setTimeout(() => {
+            eyeLeft.classList.remove('closed');
+            eyeRight.classList.remove('closed');
+            isBlinking = false;
+          }, 150);
+          // Schedule next blink
+          blinkTimer = setTimeout(blink, 2000 + Math.random() * 4000);
+        }
+        blinkTimer = setTimeout(blink, 1500);
+      }
+
+      // ========== MOUTH EXPRESSION ==========
+      function updateMouth() {
+        const avg = (state.hunger + state.happiness) / 2;
+        mouth.classList.remove('happy', 'sad');
+
+        if (avg > 70) {
+          mouth.classList.add('happy');
+        } else if (avg < 30) {
+          mouth.classList.add('sad');
+        }
+      }
+
+      // ========== UI UPDATE ==========
+      function updateUI() {
+        clampStats();
+
+        hungerBar.style.width = state.hunger + '%';
+        happinessBar.style.width = state.happiness + '%';
+        energyBar.style.width = state.energy + '%';
+
+        hungerValue.textContent = Math.round(state.hunger) + '%';
+        happinessValue.textContent = Math.round(state.happiness) + '%';
+        energyValue.textContent = Math.round(state.energy) + '%';
+
+        // Color changes on low stats
+        if (state.hunger < 30) hungerBar.style.background = 'linear-gradient(90deg, #ff6b6b, #ee5a5a)';
+        else hungerBar.style.background = 'linear-gradient(90deg, #ffb07c, #ff8a5c)';
+
+        if (state.happiness < 30) happinessBar.style.background = 'linear-gradient(90deg, #b0b0b0, #999)';
+        else happinessBar.style.background = 'linear-gradient(90deg, #ff9ec7, #ff6ba6)';
+
+        if (state.energy < 30) energyBar.style.background = 'linear-gradient(90deg, #a0a0a0, #808080)';
+        else energyBar.style.background = 'linear-gradient(90deg, #a8e6cf, #6dd5b0)';
+
+        // Hungry visual
+        if (state.hunger < 35) {
+          petArea.classList.add('hungry');
+        } else {
+          petArea.classList.remove('hungry');
+        }
+
+        updateMouth();
+
+        // Update message based on state
+        if (state.hunger < 25) {
+          setMessage("i'm soooo hungry... 🥺 feed me?");
+        } else if (state.energy < 25) {
+          setMessage("so sleepy... 💤 can i rest?");
+        } else if (state.happiness < 25) {
+          setMessage("i feel a bit lonely... 🥺 play with me?");
+        } else if (state.hunger > 80 && state.happiness > 80 && state.energy > 80) {
+          setMessage("i'm the happiest blob! 💖✨");
+        } else {
+          setMessage("i'm feeling good! 🌸 what shall we do?");
+        }
+      }
+
+      function setMessage(text) {
+        messageBubble.textContent = text;
+        // Re-trigger pop animation
+        messageBubble.style.animation = 'none';
+        void messageBubble.offsetWidth;
+        messageBubble.style.animation = 'bubblePop 0.4s ease-out';
+      }
+
+      // ========== PARTICLES ==========
+      function spawnParticle(emoji, x, y, type = 'food') {
+        const el = document.createElement('div');
+        el.textContent = emoji;
+        el.className = type === 'food' ? 'food-particle' : 'heart-particle';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1200);
+      }
+
+      function spawnHeartsAroundBlob(count = 3) {
+        const rect = blobEl.getBoundingClientRect();
+        for (let i = 0; i < count; i++) {
+          setTimeout(() => {
+            const x = rect.left + rect.width * (0.2 + Math.random() * 0.6);
+            const y = rect.top + rect.height * 0.2;
+            spawnParticle(['💕', '💖', '✨', '🌸'][Math.floor(Math.random() * 4)], x, y, 'heart');
+          }, i * 120);
+        }
+      }
+
+      // ========== ACTIONS ==========
+      function feed() {
+        if (state.hunger >= 98 && state.happiness > 80) {
+          setMessage("i'm already full! 🥰 but thank you~");
+          return;
+        }
+
+        const rect = blobEl.getBoundingClientRect();
+        const mouthX = rect.left + rect.width / 2;
+        const mouthY = rect.top + rect.height * 0.7;
+
+        // Tongue animation
+        tongue.classList.add('show');
+        setTimeout(() => tongue.classList.remove('show'), 600);
+
+        // Food particles
+        const foods = ['🍎', '🍓', '🍰', '🍪', '🍒', '🍩', '🧁'];
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            spawnParticle(foods[Math.floor(Math.random() * foods.length)],
+              mouthX + (Math.random() - 0.5) * 60,
+              mouthY - 40, 'food');
+          }, i * 100);
+        }
+
+        // Increase stats
+        state.hunger = Math.min(100, state.hunger + 18);
+        state.happiness = Math.min(100, state.happiness + 8);
+        state.energy = Math.min(100, state.energy + 4);
+        state.totalFeeds++;
+
+        setMessage("nom nom nom! 🍎 so tasty~");
+        spawnHeartsAroundBlob(2);
+        updateUI();
+        saveState();
+      }
+
+      function play() {
+        if (state.energy < 15) {
+          setMessage("too tired to play... 😴 maybe let me rest?");
+          return;
+        }
+        if (state.happiness >= 98 && state.energy > 80) {
+          setMessage("i'm already super happy! 🥰");
+          return;
+        }
+
+        // Bounce animation
+        blobEl.style.transition = 'transform 0.2s';
+        blobEl.style.transform = 'translateX(-50%) scale(1.1, 0.9)';
+        setTimeout(() => {
+          blobEl.style.transform = 'translateX(-50%) scale(0.95, 1.05)';
+        }, 150);
+        setTimeout(() => {
+          blobEl.style.transform = '';
+          blobEl.style.transition = '';
+        }, 400);
+
+        // Spawn ball particle
+        const rect = blobEl.getBoundingClientRect();
+        spawnParticle('🎾', rect.left + rect.width / 2 + 60, rect.top + 20, 'heart');
+
+        state.happiness = Math.min(100, state.happiness + 20);
+        state.energy = Math.max(0, state.energy - 12);
+        state.hunger = Math.max(0, state.hunger - 5);
+        state.totalPlays++;
+
+        setMessage("wheee! 🎾 that was fun!");
+        spawnHeartsAroundBlob(4);
+        updateUI();
+        saveState();
+      }
+
+      function rest() {
+        if (state.energy >= 95) {
+          setMessage("i'm not sleepy at all! ⚡");
+          return;
+        }
+
+        // Close eyes for a moment
+        eyeLeft.classList.add('closed');
+        eyeRight.classList.add('closed');
+        setMessage("zzz... 😴 resting...");
+
+        // Zzz particles
+        const rect = blobEl.getBoundingClientRect();
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            spawnParticle('💤', rect.left + rect.width * 0.7 + i * 15, rect.top - 10, 'heart');
+          }, i * 250);
+        }
+
+        state.energy = Math.min(100, state.energy + 30);
+        state.happiness = Math.min(100, state.happiness + 5);
+
+        setTimeout(() => {
+          eyeLeft.classList.remove('closed');
+          eyeRight.classList.remove('closed');
+          updateUI();
+          saveState();
+          setMessage("i feel so refreshed! ⚡✨");
+        }, 1500);
+
+        updateUI();
+      }
+
+      // ========== RESET (hidden, via long press on title) ==========
+      function resetPet() {
+        state = { ...defaultState, lastUpdate: Date.now() };
+        saveState();
+        updateUI();
+        setMessage("a fresh new start! 🌱 hi again!");
+      }
+
+      // ========== INIT ==========
+      function init() {
+        loadState();
+        createFloatingHearts();
+        injectFollowAnimation();
+        startBlinking();
+
+        // Event listeners
+        document.addEventListener('mousemove', handleMouseMove);
+        petArea.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+        // Buttons
+        feedBtn.addEventListener('click', feed);
+        playBtn.addEventListener('click', play);
+        restBtn.addEventListener('click', rest);
+
+        // Click on blob = pet it
+        blobEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state.happiness = Math.min(100, state.happiness + 6);
+          state.energy = Math.min(100, state.energy + 2);
+          setMessage("hehe~ that tickles! 💕");
+          spawnHeartsAroundBlob(3);
+          updateUI();
+          saveState();
+        });
+
+        // Initial UI
+        updateUI();
+
+        // Start follow loop
+        followLoop();
+
+        // Periodic stat decay (every 30 seconds)
+        setInterval(() => {
+          state.hunger = Math.max(0, state.hunger - 1.5);
+          state.energy = Math.max(0, state.energy - 1);
+          state.happiness = Math.max(0, state.happiness - 0.8);
+          clampStats();
+          updateUI();
+          saveState();
+        }, 30000);
+
+        // Welcome message after a moment
+        setTimeout(() => {
+          setMessage("hi! i'm blobby 🌸 hover around me!");
+        }, 500);
+
+        // Save on unload
+        window.addEventListener('beforeunload', saveState);
+      }
+
+      // Start everything
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // Expose reset for console
+      window.resetBlobby = resetPet;
+    })();
+  </script>
+</body>
+</html>

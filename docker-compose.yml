@@ -1,0 +1,73 @@
+---
+services:
+  bus:
+    build: ./bus
+    container_name: bus_cont
+    ports:
+      - "3000:80"
+    env_file:
+      - .env.dev
+    environment:
+      - bus_var=var
+    depends_on:
+      - recharge
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.5"
+          memory: 100M
+        limits:
+          cpus: "1.0"
+          memory: 200M
+    networks:
+      - network1
+    volumes:
+      - volume1:/bus
+
+  friend:
+    build: ./friend
+    container_name: friend_cont
+    ports:
+      - "3001:80"
+    depends_on:
+      - bus
+    networks:
+      - network2
+    volumes:
+      - volume2:/friend
+    environment:
+      - friend_var=env_var
+    env_file:
+      - .env.test
+
+  recharge:
+    build: ./recharge
+    container_name: recharge_cont
+    ports:
+      - "3002:80"
+    environment:
+      - recharge_env=env
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.2"
+          memory: 50M
+        limits:
+          cpus: "0.5"
+          memory: 150M
+    volumes:
+      - volume1:/recharge
+    networks:
+      - network1
+
+networks:
+  network1:
+    driver: bridge
+  network2:
+    driver: bridge
+
+volumes:
+  volume1:
+  volume2:
+
+...
